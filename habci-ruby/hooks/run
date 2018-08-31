@@ -1,0 +1,30 @@
+#!/bin/bash
+
+exec 2>&1
+ln -s {{pkgPathFor "core/bundler"}}/bin /bin
+source {{pkg.svc_config_path}}/clone.sh
+source {{pkg.svc_config_path}}/build.sh
+source {{pkg.svc_config_path}}/upload.sh
+habci_clone
+result=$?
+if [[ $result != 0 ]]; then
+  echo "clone failed with $result"
+  hab svc unload gscho/habci-ruby
+  sleep 5s
+fi
+cd {{pkg.svc_files_path}}/tmp
+habci_build
+result=$?
+if [[ $result != 0 ]]; then
+  echo "build with $result"
+  sleep 5s
+fi
+habci_upload
+result=$?
+if [[ $result != 0 ]]; then
+  echo "upload with $result"
+  sleep 5s
+fi
+
+echo "Build Success"
+hab svc unload gscho/habci-ruby
